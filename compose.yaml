@@ -1,0 +1,36 @@
+services:
+  ollama:
+    image: ollama/ollama
+    volumes:
+      - .cache/ollama:/root/.ollama
+    networks:
+      - no-internet
+    expose:
+      - "11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  proxy:
+    image: stn1slv/http-proxy-logger
+    depends_on:
+      - ollama
+    environment:
+      - TARGET=http://ollama:11434
+      - PORT=11434
+    networks:
+      - no-internet
+      - internet
+    ports:
+      - "11434:11434"
+
+networks:
+  no-internet:
+    driver: bridge
+    internal: true
+  internet:
+    driver: bridge
